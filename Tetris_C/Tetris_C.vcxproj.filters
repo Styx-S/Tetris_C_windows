@@ -35,6 +35,9 @@
     <ClCompile Include="Tetris_C.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="winGame.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tetris_C.rc">

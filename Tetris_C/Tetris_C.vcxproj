@@ -160,6 +160,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Tetris_C.cpp" />
+    <ClCompile Include="winGame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Tetris_C.rc" />
