@@ -69,6 +69,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static GameBoard *pGame;
 	static GameBlock *pBlock;
 	HDC hdc;
+	HBRUSH hBrush;
 	PAINTSTRUCT ps;
 	int i, j;
 	switch (message)
@@ -80,6 +81,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// Gameover!
 			MessageBox(hwnd, TEXT("GameOver!"), TEXT("Tetris"), MB_ICONINFORMATION);
 		}
+		SetTimer(hwnd, 1, 550, NULL);
+		return 0;
+	case WM_TIMER:
+		SendMessage(hwnd, WM_KEYDOWN, VK_DOWN, NULL);
 		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -116,9 +121,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		for (int i = 0; i < xSlot; i++) {
 			for (int j = 0; j < ySlot; j++) {
 				if (pGame->pcrGameArea[i + j * xSlot]) {
-
+					hBrush = CreateSolidBrush(pGame->pcrGameArea[i + j * xSlot]);
+					SelectObject(hdc, hBrush);
 					Rectangle(hdc, i*cxClient / xSlot, j*cyClient / ySlot,
 						(i + 1)*cxClient / xSlot, (j + 1)*cyClient / ySlot);
+					DeleteObject(hBrush);
 				}
 			}
 		}
