@@ -1,6 +1,7 @@
 // 用于windows程序设计课程的练习
 #include "stdafx.h"
 #include "Tetris_C.h"
+#include <tchar.h>
 
 #define WIDTH 10
 #define HEIGHT 16
@@ -66,6 +67,7 @@ typedef struct {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static int cxClient, cyClient, xSlot = 10, ySlot = 16;
+	static TCHAR szBuffer[64];
 	static GameBoard *pGame;
 	HDC hdc;
 	HBRUSH hBrush;
@@ -124,6 +126,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}
 		}
+		wsprintf(szBuffer, TEXT("%d"), pGame->score);
+		TextOut(hdc, 0, 0, szBuffer, _tcslen(szBuffer));
 		EndPaint(hwnd, &ps);
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
