@@ -67,7 +67,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static int cxClient, cyClient, xSlot = 10, ySlot = 16;
 	static GameBoard *pGame;
-	static GameBlock *pBlock;
 	HDC hdc;
 	HBRUSH hBrush;
 	PAINTSTRUCT ps;
@@ -77,10 +76,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		srand(time(NULL));
 		makeBoard(&pGame, xSlot, ySlot);
-		if (!makeBlock(pGame, &pBlock)) {
-			// Gameover!
-			MessageBox(hwnd, TEXT("GameOver!"), TEXT("Tetris"), MB_ICONINFORMATION);
-		}
 		SetTimer(hwnd, 1, 550, NULL);
 		return 0;
 	case WM_TIMER:
@@ -100,19 +95,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case VK_UP:
-			if (BlockRotate(pGame, pBlock))
+			if (BlockRotate(pGame))
 				InvalidateRect(hwnd, NULL, TRUE);
 			return 0;
 		case VK_DOWN:
-			BlockDown(pGame, &pBlock);
+			BlockDown(pGame);
 			InvalidateRect(hwnd, NULL, TRUE);
 			return 0;
 		case VK_LEFT:
-			if (BlockLeft(pGame, pBlock))
+			if (BlockLeft(pGame))
 				InvalidateRect(hwnd, NULL, TRUE);
 			return 0;
 		case VK_RIGHT:
-			if (BlockRight(pGame, pBlock))
+			if (BlockRight(pGame))
 				InvalidateRect(hwnd, NULL, TRUE);
 			return 0;
 		}
