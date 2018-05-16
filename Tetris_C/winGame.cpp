@@ -43,7 +43,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	// 执行完此函数，windows已分配了一块内存用来保存窗口的信息
 	hwnd = CreateWindow(szAppName, TEXT("Learn Windows Programing"),
 		WS_OVERLAPPEDWINDOW, // 窗口风格
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, // 初始x/y坐标，x/y方向尺寸
+		200, 50, 750, 800, // 初始x/y坐标，x/y方向尺寸
 		NULL, NULL, hInstance, NULL); // 父窗口句柄、窗口菜单句柄、程序实例句柄、创建参数
 									  // 将窗口显示在屏幕上
 	ShowWindow(hwnd, iCmdShow);
@@ -59,14 +59,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	}
 	return msg.wParam;
 }
-typedef struct {
-	int xLeft, yTop;
-	int xRight, yBottom;
-} GameRect;
-
+// 用于动态计算需要的窗口大小
+static bool caculateSubRect(int width, int height, int subWidth, int subHeight, int *px, int *py) {
+	if (width < subWidth | height < subHeight)
+		return false;
+	*px = (width - subWidth) / 2;
+	*py = (height - subHeight) / 2;
+	return true;
+}
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static int cxClient, cyClient, xSlot = 10, ySlot = 16;
+	static double BLOCK_SIZE;
 	static TCHAR szBuffer[64];
 	static GameBoard *pGame;
 	HDC hdc;
@@ -76,6 +80,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CREATE:
+
 		srand(time(NULL));
 		makeBoard(&pGame, xSlot, ySlot);
 		SetTimer(hwnd, 1, 550, NULL);
@@ -89,6 +94,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		cxClient = LOWORD(lParam);
 		cyClient = HIWORD(lParam);
+		BLOCK_SIZE = 1.0*cyClient / ySlot;
 		InvalidateRect(hwnd, NULL, TRUE);
 		return 0;
 	case WM_KEYDOWN:
@@ -115,20 +121,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
+		// 画出游戏界面
 		for (int i = 0; i < xSlot; i++) {
 			for (int j = 0; j < ySlot; j++) {
 				if (pGame->pcrGameArea[i + j * xSlot]) {
 					hBrush = CreateSolidBrush(pGame->pcrGameArea[i + j * xSlot]);
 					SelectObject(hdc, hBrush);
-					Rectangle(hdc, i*cxClient / xSlot, j*cyClient / ySlot,
-						(i + 1)*cxClient / xSlot, (j + 1)*cyClient / ySlot);
+					Rectangle(hdc, i*BLOCK_SIZE, j*BLOCK_SIZE, (i + 1)*BLOCK_SIZE, (j + 1)*BLOCK_SIZE);
 					DeleteObject(hBrush);
 				}
 			}
 		}
+		// 画出分割线
+		MoveToEx(hdc, xSlot*BLOCK_SIZE, 0, NULL);
+		LineTo(hdc, xSlot*BLOCK_SIZE, cyClient);
+		// 画出下一个方块
+		int offset = BLOCK_SIZE * (xSlot + 1);
+		for (int i = 0; i < pGame->pNextBlock->size; i++){
+			for (int j = 0; j < pGame->pNextBlock->size; j++) {
+				if (pGame->pNextBlock->pbBlockArea[i + j * pGame->pNextBlock->size]) {
+					hBrush = CreateSolidBrush(pGame->pNextBlock->color);
+					SelectObject(hdc, hBrush);
+					Rectangle(hdc, offset + i * BLOCK_SIZE, (ySlot / 4)*BLOCK_SIZE + j * BLOCK_SIZE,
+						offset + (i + 1)*BLOCK_SIZE, (ySlot / 4)*BLOCK_SIZE + (j + 1)*BLOCK_SIZE);
+					DeleteObject(hBrush);
+				}
+			}
+		}
+		// 画出分数
 		wsprintf(szBuffer, TEXT("%d"), pGame->score);
 		TextOut(hdc, 0, 0, szBuffer, _tcslen(szBuffer));
 		EndPaint(hwnd, &ps);
+		return 0;
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
