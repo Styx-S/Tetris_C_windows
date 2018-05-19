@@ -19,7 +19,7 @@ iCmdShow: 指示此程序最初以（最小化、全屏、正常）显示
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
 	// TCHAR 是windows 维护的宏，可以编译出Unicode(宽字符) 或者 ASCII版本的函数和变量操作
-	static TCHAR szAppName[] = TEXT("WindowsProgramingLearning");
+	static TCHAR szAppName[] = TEXT("Tetris");
 	HWND hwnd;
 	MSG msg;
 	WNDCLASS wndclass;
@@ -41,7 +41,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	}
 
 	// 执行完此函数，windows已分配了一块内存用来保存窗口的信息
-	hwnd = CreateWindow(szAppName, TEXT("Learn Windows Programing"),
+	hwnd = CreateWindow(szAppName, TEXT("Tetris"),
 		WS_OVERLAPPEDWINDOW, // 窗口风格
 		200, 50, 750, 800, // 初始x/y坐标，x/y方向尺寸
 		NULL, NULL, hInstance, NULL); // 父窗口句柄、窗口菜单句柄、程序实例句柄、创建参数
@@ -76,7 +76,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	HBRUSH hBrush;
 	PAINTSTRUCT ps;
-	int i, j;
+	HFONT hf;
+	int i, j, xoffset, yoffset;
 	switch (message)
 	{
 	case WM_CREATE:
@@ -136,21 +137,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		MoveToEx(hdc, xSlot*BLOCK_SIZE, 0, NULL);
 		LineTo(hdc, xSlot*BLOCK_SIZE, cyClient);
 		// 画出下一个方块
-		int offset = BLOCK_SIZE * (xSlot + 1);
+		int xoffset = BLOCK_SIZE * (xSlot + 1);
+		// 竖条特别处理
+		if (pGame->pNextBlock->size == 4)
+			yoffset = (ySlot)/8;
+		else yoffset = (ySlot / 4);
 		for (int i = 0; i < pGame->pNextBlock->size; i++){
 			for (int j = 0; j < pGame->pNextBlock->size; j++) {
 				if (pGame->pNextBlock->pbBlockArea[i + j * pGame->pNextBlock->size]) {
 					hBrush = CreateSolidBrush(pGame->pNextBlock->color);
 					SelectObject(hdc, hBrush);
-					Rectangle(hdc, offset + i * BLOCK_SIZE, (ySlot / 4)*BLOCK_SIZE + j * BLOCK_SIZE,
-						offset + (i + 1)*BLOCK_SIZE, (ySlot / 4)*BLOCK_SIZE + (j + 1)*BLOCK_SIZE);
+					Rectangle(hdc, xoffset + i * BLOCK_SIZE, yoffset*BLOCK_SIZE + j * BLOCK_SIZE,
+						xoffset + (i + 1)*BLOCK_SIZE, yoffset*BLOCK_SIZE + (j + 1)*BLOCK_SIZE);
 					DeleteObject(hBrush);
 				}
 			}
 		}
 		// 画出分数
-		wsprintf(szBuffer, TEXT("%d"), pGame->score);
-		TextOut(hdc, 0, 0, szBuffer, _tcslen(szBuffer));
+		hf = CreateFont(20, 0, 0, 0, 400, 0, 0, 0, OEM_CHARSET,
+			0, 0, 0, FIXED_PITCH, NULL);
+		TextOut(hdc, xoffset + 1 + BLOCK_SIZE, (ySlot) / 8 * 3 * BLOCK_SIZE, TEXT("Next"), _tcslen(TEXT("Next")));
+		SelectObject(hdc, hf);
+		wsprintf(szBuffer, TEXT("Score: %d"), pGame->score);
+		TextOut(hdc, xoffset+1+BLOCK_SIZE, (ySlot)/2*BLOCK_SIZE, szBuffer, _tcslen(szBuffer));
+		DeleteObject(hf);
 		EndPaint(hwnd, &ps);
 		return 0;
 	}
