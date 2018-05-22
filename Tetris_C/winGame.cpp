@@ -5,6 +5,7 @@
 
 #define WIDTH 10
 #define HEIGHT 16
+#define BASE_DIFF 550
 
 // 声明窗口过程处理函数的原型
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -84,7 +85,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		srand(time(NULL));
 		makeBoard(&pGame, xSlot, ySlot);
-		SetTimer(hwnd, 1, 550, NULL);
+		SetTimer(hwnd, 1, BASE_DIFF, NULL);
 		return 0;
 	case WM_TIMER:
 		SendMessage(hwnd, WM_KEYDOWN, VK_DOWN, NULL);
@@ -108,8 +109,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				InvalidateRect(hwnd, NULL, TRUE);
 			return 0;
 		case VK_DOWN:
-			BlockDown(pGame);
-			InvalidateRect(hwnd, NULL, TRUE);
+			if (BlockDown(pGame)) {
+				InvalidateRect(hwnd, NULL, TRUE);
+				int interval = BASE_DIFF * (1.0 - pGame->score*1.0 / 20);
+				SetTimer(hwnd, 1, interval, NULL);
+			}
 			return 0;
 		case VK_LEFT:
 			if (BlockLeft(pGame))
